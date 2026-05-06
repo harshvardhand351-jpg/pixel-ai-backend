@@ -36,7 +36,8 @@ app.post("/chat", async (req, res) => {
     console.log(JSON.stringify(data, null, 2));
 
     const reply =
-         data.candidates[0].content.parts[0].text;
+         data.candidates?.[0]?.content?.parts?.map(part => part.text).join(" ") 
+       || "No response from AI";
 
     res.json({ reply });
 
