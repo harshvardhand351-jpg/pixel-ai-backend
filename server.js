@@ -18,6 +18,7 @@ app.get("/", (req, res) => {
 // ================= CHAT ROUTE =================
 
 app.post("/chat", async (req, res) => {
+
   console.log("🔥 CHAT ROUTE HIT");
 
   const userMessage = req.body.message;
@@ -26,7 +27,7 @@ app.post("/chat", async (req, res) => {
   try {
 
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${API_KEY}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${API_KEY}`,
       {
         method: "POST",
         headers: {
@@ -51,14 +52,14 @@ app.post("/chat", async (req, res) => {
     console.log("Gemini Response:");
     console.log(JSON.stringify(data, null, 2));
 
-    // Handle API Errors
+    // Handle API errors
     if (!response.ok) {
       return res.status(500).json({
         reply: data.error?.message || "Gemini API Error",
       });
     }
 
-    // Extract AI Reply
+    // Extract reply
     const reply =
       data.candidates?.[0]?.content?.parts
         ?.map((part) => part.text)
@@ -76,6 +77,7 @@ app.post("/chat", async (req, res) => {
     });
 
   }
+
 });
 
 // ================= CLOUDINARY UPLOAD =================
