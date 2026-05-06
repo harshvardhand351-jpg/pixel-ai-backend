@@ -9,9 +9,13 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+// ================= ROOT =================
+
 app.get("/", (req, res) => {
   res.send("Server is working ✅");
 });
+
+// ================= CHAT ROUTE =================
 
 app.post("/chat", async (req, res) => {
   console.log("🔥 CHAT ROUTE HIT");
@@ -20,8 +24,10 @@ app.post("/chat", async (req, res) => {
   const API_KEY = process.env.GEMINI_API_KEY;
 
   try {
+
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`,  {
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${API_KEY}`,
+      {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -42,8 +48,17 @@ app.post("/chat", async (req, res) => {
 
     const data = await response.json();
 
+    console.log("Gemini Response:");
     console.log(JSON.stringify(data, null, 2));
 
+    // Handle API Errors
+    if (!response.ok) {
+      return res.status(500).json({
+        reply: data.error?.message || "Gemini API Error",
+      });
+    }
+
+    // Extract AI Reply
     const reply =
       data.candidates?.[0]?.content?.parts
         ?.map((part) => part.text)
@@ -52,11 +67,14 @@ app.post("/chat", async (req, res) => {
     res.json({ reply });
 
   } catch (error) {
+
+    console.error("SERVER ERROR:");
     console.error(error);
 
     res.status(500).json({
       reply: "Error connecting to AI",
     });
+
   }
 });
 
@@ -69,9 +87,11 @@ const upload = multer({
 });
 
 app.post("/upload", upload.single("file"), async (req, res) => {
+
   try {
 
     const streamUpload = () => {
+
       return new Promise((resolve, reject) => {
 
         const stream = cloudinary.uploader.upload_stream(
@@ -80,16 +100,20 @@ app.post("/upload", upload.single("file"), async (req, res) => {
             resource_type: "auto",
           },
           (error, result) => {
+
             if (result) {
               resolve(result);
             } else {
               reject(error);
             }
+
           }
         );
 
         streamifier.createReadStream(req.file.buffer).pipe(stream);
+
       });
+
     };
 
     const result = await streamUpload();
@@ -100,13 +124,16 @@ app.post("/upload", upload.single("file"), async (req, res) => {
     });
 
   } catch (error) {
+
     console.error(error);
 
     res.status(500).json({
       success: false,
       error: error.message,
     });
+
   }
+
 });
 
 // ================= PORT =================
