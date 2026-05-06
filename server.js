@@ -1,6 +1,5 @@
 import express from "express";
 import cors from "cors";
-
 import multer from "multer";
 import cloudinary from "./cloudinary.js";
 import streamifier from "streamifier";
@@ -22,35 +21,53 @@ app.post("/chat", async (req, res) => {
 
   try {
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`,
+      `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${API_KEY}`,
       {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify({
-          contents: [{ parts: [{ text: userMessage }] }],
+          contents: [
+            {
+              parts: [
+                {
+                  text: userMessage,
+                },
+              ],
+            },
+          ],
         }),
       }
     );
 
     const data = await response.json();
+
     console.log(JSON.stringify(data, null, 2));
 
     const reply =
-         data.candidates?.[0]?.content?.parts?.map(part => part.text).join(" ") 
-       || "No response from AI";
+      data.candidates?.[0]?.content?.parts
+        ?.map((part) => part.text)
+        .join(" ") || "No response from AI";
 
     res.json({ reply });
 
   } catch (error) {
     console.error(error);
-    res.status(500).json({ reply: "Error connecting to AI" });
+
+    res.status(500).json({
+      reply: "Error connecting to AI",
+    });
   }
 });
 
 // ================= CLOUDINARY UPLOAD =================
 
 const storage = multer.memoryStorage();
-const upload = multer({ storage: storage });
+
+const upload = multer({
+  storage: storage,
+});
 
 app.post("/upload", upload.single("file"), async (req, res) => {
   try {
